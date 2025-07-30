@@ -8,30 +8,30 @@ import (
 	"github.com/yusufekoanggoro/payment-service/internal/modules/payment/domain"
 	"github.com/yusufekoanggoro/payment-service/internal/modules/payment/domain/request"
 	"github.com/yusufekoanggoro/payment-service/internal/modules/payment/repository"
-	"github.com/yusufekoanggoro/payment-service/pkg/services/paymentgateway"
+	"github.com/yusufekoanggoro/payment-service/pkg/services/paygateway"
 )
 
 type paymentUsecase struct {
-	repo              repository.PaymentRepository
-	idempoRepo        repository.IdempotencyRepository
-	paymentStrategies map[string]paymentgateway.Strategy
+	repo          repository.PaymentRepository
+	idempoRepo    repository.IdempotencyRepository
+	payStrategies map[string]paygateway.Strategy
 }
 
-func NewPaymentUsecase(repo repository.PaymentRepository, idempoRepo repository.IdempotencyRepository, paymentStrategies map[string]paymentgateway.Strategy) PaymentUsecase {
+func NewPaymentUsecase(repo repository.PaymentRepository, idempoRepo repository.IdempotencyRepository, payStrategies map[string]paygateway.Strategy) PaymentUsecase {
 	return &paymentUsecase{
-		repo:              repo,
-		idempoRepo:        idempoRepo,
-		paymentStrategies: paymentStrategies,
+		repo:          repo,
+		idempoRepo:    idempoRepo,
+		payStrategies: payStrategies,
 	}
 }
 
 func (p *paymentUsecase) CreatePayment(ctx context.Context, req *request.CreatePaymentRequest) (*domain.Payment, error) {
-	strategy, ok := p.paymentStrategies[req.PaymentGateway+"_"+req.PaymentType]
+	payStrategy, ok := p.payStrategies[req.PaymentGateway+"_"+req.PaymentType]
 	if !ok {
 		return nil, fmt.Errorf("unsupported payment gateway: %s", req.PaymentGateway)
 	}
 
-	paymentResp, err := strategy.ProcessPayment(ctx, req)
+	paymentResp, err := payStrategy.ProcessPayment(ctx, &paygateway.ProcessPaymentRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to process payment: %w", err)
 	}
@@ -40,7 +40,7 @@ func (p *paymentUsecase) CreatePayment(ctx context.Context, req *request.CreateP
 		OrderID:        req.OrderID,
 		PaymentGateway: req.PaymentGateway,
 		PaymentType:    req.PaymentType,
-		ExternalID:     paymentResp.TransactionID,
+		ExternalID:     paymentResp.OrderID,
 		Amount:         req.Amount,
 		Status:         paymentResp.Status, // default status
 		CreatedAt:      time.Now(),

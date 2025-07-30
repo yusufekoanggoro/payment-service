@@ -8,8 +8,8 @@ import (
 	"github.com/yusufekoanggoro/payment-service/internal/modules/payment/repository"
 	"github.com/yusufekoanggoro/payment-service/internal/modules/payment/usecase"
 	"github.com/yusufekoanggoro/payment-service/pkg/middleware"
-	"github.com/yusufekoanggoro/payment-service/pkg/services/paymentgateway"
-	"github.com/yusufekoanggoro/payment-service/pkg/services/paymentgateway/midtrans"
+	"github.com/yusufekoanggoro/payment-service/pkg/services/paygateway"
+	"github.com/yusufekoanggoro/payment-service/pkg/services/paygateway/midtrans"
 )
 
 type module struct {
@@ -21,9 +21,9 @@ func NewModule(db *sql.DB, mw middleware.Middleware) *module {
 
 	repo := repository.NewPaymentRepository(db)
 	idempoRepo := repository.NewIdempotency(db)
-	uc := usecase.NewPaymentUsecase(repo, idempoRepo, map[string]paymentgateway.Strategy{
-		"midtrans_va":   midtrans.NewMidtransVAHTTP(),
-		"midtrans_qris": midtrans.NewMidtransQRISHTTP(),
+	uc := usecase.NewPaymentUsecase(repo, idempoRepo, map[string]paygateway.Strategy{
+		"midtrans_va":   midtrans.NewVAStrategy(),
+		"midtrans_qris": midtrans.NewQRISStrategy(),
 	})
 	restHandler := resthandler.NewRestHandler(uc, mw)
 
