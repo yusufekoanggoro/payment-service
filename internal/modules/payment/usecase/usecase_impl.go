@@ -13,12 +13,14 @@ import (
 
 type paymentUsecase struct {
 	repo              repository.PaymentRepository
+	idempoRepo        repository.IdempotencyRepository
 	paymentStrategies map[string]paymentgateway.Strategy
 }
 
-func NewPaymentUsecase(repo repository.PaymentRepository, paymentStrategies map[string]paymentgateway.Strategy) PaymentUsecase {
+func NewPaymentUsecase(repo repository.PaymentRepository, idempoRepo repository.IdempotencyRepository, paymentStrategies map[string]paymentgateway.Strategy) PaymentUsecase {
 	return &paymentUsecase{
 		repo:              repo,
+		idempoRepo:        idempoRepo,
 		paymentStrategies: paymentStrategies,
 	}
 }
@@ -42,6 +44,7 @@ func (p *paymentUsecase) CreatePayment(ctx context.Context, req *request.CreateP
 		Amount:         req.Amount,
 		Status:         paymentResp.Status, // default status
 		CreatedAt:      time.Now(),
+		PaidAt:         nil,
 	}
 
 	err = p.repo.Save(ctx, newPayment)
@@ -49,5 +52,5 @@ func (p *paymentUsecase) CreatePayment(ctx context.Context, req *request.CreateP
 		return nil, fmt.Errorf("failed to save payment: %w", err)
 	}
 
-	return &domain.Payment{}, nil
+	return newPayment, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yusufekoanggoro/payment-service/internal/factory"
 	infrastructure "github.com/yusufekoanggoro/payment-service/internal/infrastructure/database"
+	"github.com/yusufekoanggoro/payment-service/pkg/middleware"
 )
 
 func main() {
@@ -19,6 +20,9 @@ func main() {
 
 	db := infrastructure.InitDB("./data/payments.db")
 	defer db.Close()
+
+	mw := middleware.NewMiddleware(db)
+	modules := factory.InitAllModule(db, mw)
 
 	router := gin.Default()
 
@@ -33,8 +37,6 @@ func main() {
 	}))
 
 	apiGroup := router.Group("/api")
-
-	modules := factory.InitAllModule(db)
 
 	for _, m := range modules {
 		m.RestHandler().RegisterRoutes(apiGroup)

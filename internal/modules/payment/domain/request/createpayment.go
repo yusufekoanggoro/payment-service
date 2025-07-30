@@ -6,4 +6,5 @@ type CreatePaymentRequest struct {
 	PaymentType    string  `json:"paymentType" binding:"required"`
 	Bank           string  `json:"bank" binding:"required_if=PaymentType va"`
 	Amount         float64 `json:"amount" binding:"required,gt=0"`
+	IdempotencyKey string  `json:"idempotencyKey" binding:"required"`
 }

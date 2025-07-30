@@ -23,9 +23,16 @@ func InitDB(path string) *sql.DB {
 		amount REAL NOT NULL,
 		status TEXT CHECK(status IN ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED')) NOT NULL,
 		paid_at DATETIME,
-		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (order_id) REFERENCES orders(id)
-	);`
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+	CREATE TABLE IF NOT EXISTS idempotency_keys (
+		key TEXT PRIMARY KEY,
+		request_hash TEXT,
+		response_body TEXT,
+		status_code INTEGER,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`
 
 	_, err = db.Exec(schema)
 	if err != nil {
