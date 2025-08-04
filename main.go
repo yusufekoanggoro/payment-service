@@ -10,6 +10,7 @@ import (
 	"github.com/yusufekoanggoro/payment-service/internal/factory"
 	infrastructure "github.com/yusufekoanggoro/payment-service/internal/infrastructure/database"
 	"github.com/yusufekoanggoro/payment-service/pkg/middleware"
+	"github.com/yusufekoanggoro/payment-service/pkg/services"
 )
 
 func main() {
@@ -22,7 +23,9 @@ func main() {
 	defer db.Close()
 
 	mw := middleware.NewMiddleware(db)
-	modules := factory.InitAllModule(db, mw)
+	services := services.NewExternalService()
+
+	modules := factory.InitAllModule(db, mw, services)
 
 	router := gin.Default()
 
